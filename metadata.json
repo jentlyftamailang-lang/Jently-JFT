@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Kurikulum AI: Pemeta CP-TP-IKTP-MODUL",
+  "description": "Aplikasi bertenaga AI untuk memetakan Capaian Pembelajaran (CP) menjadi Tujuan Pembelajaran (TP), menganalisis KKTP berbasis Taksonomi Bloom secara mendetail, dan menyusun ATP & Modul Ajar secara otomatis sesuai Kurikulum Merdeka.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

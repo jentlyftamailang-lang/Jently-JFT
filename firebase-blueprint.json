@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "AuthorizedUser": {
+      "title": "Authorized User",
+      "description": "Users allowed to access the application",
+      "type": "object",
+      "properties": {
+        "addedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the user was authorized"
+        },
+        "addedBy": {
+          "type": "string",
+          "format": "email",
+          "description": "Who authorized this user"
+        }
+      },
+      "required": ["addedAt", "addedBy"]
+    },
+    "SavedPerangkat": {
+      "title": "Saved Perangkat Ajar",
+      "description": "User's saved generated documents like CP, TP, ATP, and Modules",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns this document"
+        },
+        "title": {
+          "type": "string",
+          "description": "A generated title based on subject and phase/classes"
+        },
+        "payload": {
+          "type": "string",
+          "description": "A JSON serialized string containing mappingResult, atp, modules, etc."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "title", "payload", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "authorized_users/{email}": {
+      "schema": "AuthorizedUser",
+      "description": "Collection of authorized email addresses"
+    },
+    "perangkat_ajar/{docId}": {
+      "schema": "SavedPerangkat",
+      "description": "Collection of users' generated documents"
+    }
+  }
+}
