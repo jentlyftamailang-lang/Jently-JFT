@@ -26,6 +26,11 @@ export const CLASSES: ClassLevel[] = [
   { id: '12', name: 'Kelas 12', phase: 'F' },
 ];
 
+export interface IndikatorTujuanPembelajaran {
+  indikator: string;
+  kktp: string[];
+}
+
 export interface TujuanPembelajaran {
   id: string;
   element: string; // The element/domain of the subject
@@ -33,7 +38,7 @@ export interface TujuanPembelajaran {
   competency: string; 
   content: string;    
   classLevel: string;
-  kktp: string[]; // Kriteria Ketercapaian Tujuan Pembelajaran
+  indikatorTp: IndikatorTujuanPembelajaran[]; // Indikator Tujuan Pembelajaran & KKTP masing-masing
   materials?: string[]; // Lingkup Materi
   meetings?: { // Rekomendasi Pertemuan
     session: number;
@@ -90,7 +95,7 @@ export interface ATPItem {
   element: string;
   competency: string;
   content: string; // Materi
-  kktp: string[]; // Indikator Ketercapaian
+  indikatorTp: IndikatorTujuanPembelajaran[]; // Indikator Tujuan Pembelajaran & KKTP masing-masing
   jp: number;
   numberOfMeetings: number;
   semester: 1 | 2;

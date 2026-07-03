@@ -217,13 +217,24 @@ const TP_SCHEMA = {
           competency: { type: Type.STRING, description: "Kompetensi" },
           content: { type: Type.STRING, description: "Lingkup Materi" },
           classLevel: { type: Type.STRING, description: "Kelas (ID)" },
-          kktp: { 
-            type: Type.ARRAY, 
-            items: { type: Type.STRING },
-            description: "Daftar 3-4 kriteria ketercapaian (KKTP)"
+          indikatorTp: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                indikator: { type: Type.STRING, description: "Kalimat Indikator Tujuan Pembelajaran yang konkret dan terukur (misal: 'Peserta didik mampu menyebutkan...')" },
+                kktp: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: "Daftar 3-4 Kriteria Ketercapaian (KKTP) menggunakan taksonomi Bloom (C1-C6) khusus untuk indikator ini. Format wajib: '[C1 - Mengingat] Siswa mampu...'"
+                }
+              },
+              required: ["indikator", "kktp"]
+            },
+            description: "Daftar Indikator Tujuan Pembelajaran, masing-masing dengan KKTP tersendiri"
           }
         },
-        required: ["id", "element", "statement", "competency", "content", "classLevel", "kktp"]
+        required: ["id", "element", "statement", "competency", "content", "classLevel", "indikatorTp"]
       }
     }
   },
@@ -260,17 +271,20 @@ export async function generateTP(cpContent: string, phase: Phase, selectedClasse
        - Setiap TP HARUS dikategorikan ke dalam Elemen yang sesuai berdasarkan baris aslinya di teks CP.
        - JANGAN membuat nama elemen baru, gunakan struktur baris yang ada.
     5. PROPORSI TP PER ELEMEN: Setiap Elemen (setiap baris dari teks CP) WAJIB memiliki TP yang memadai untuk mencakup seluruh isi kompetensinya di SETIAP kelas.
-    6. kktp: **SANGAT PENTING & WAJIB**: Analisis dan susunlah Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) secara mendalam menggunakan **Taksonomi Bloom** (tingkat kognitif C1 hingga C6). Berikan 3-4 kriteria ketercapaian yang konkret, terukur, dan detail untuk setiap TP. Di setiap butir KKTP, Anda **WAJIB** mencantumkan level/tingkat kognitif Bloom di dalam tanda kurung siku di awal kalimat secara eksplisit, misalnya:
-       - "[C1 - Mengingat] Siswa mampu menyebutkan/mengingat..."
-       - "[C2 - Memahami] Siswa mampu menjelaskan/mengidentifikasi..."
-       - "[C3 - Menerapkan] Siswa mampu mengimplementasikan/menggunakan..."
-       - "[C4 - Menganalisis] Siswa mampu menganalisis/membandingkan..."
-       - "[C5 - Mengevaluasi] Siswa mampu mengevaluasi/mengkritisi/menilai..."
-       - "[C6 - Menciptakan] Siswa mampu merancang/menciptakan/menyusun..."
+    6. indikatorTp & kktp: **SANGAT PENTING & WAJIB**: Setiap Tujuan Pembelajaran (TP) harus dipecah menjadi beberapa **Indikator Tujuan Pembelajaran (indikatorTp)** yang konkret dan terukur.
+       - Di dalam field "indikatorTp" (yang berupa array of object), tentukan minimal 2-3 Indikator TP.
+       - Untuk **SETIAP** Indikator TP tersebut, susunlah Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) secara mendalam menggunakan Taksonomi Bloom (tingkat kognitif C1 hingga C6) yang relevan dan diturunkan langsung dari indikator tersebut secara kritis.
+       - Masukkan KKTP ini ke dalam field "kktp" di dalam objek Indikator TP masing-masing (berupa array of string). Berikan 3-4 kriteria KKTP yang konkret, terukur, dan detail untuk masing-masing indikator.
+       - Di setiap butir KKTP, Anda **WAJIB** mencantumkan level/tingkat kognitif Bloom di dalam tanda kurung siku di awal kalimat secara eksplisit, misalnya:
+         - "[C1 - Mengingat] Peserta didik mampu menyebutkan..."
+         - "[C2 - Memahami] Peserta didik mampu menjelaskan..."
+         - "[C3 - Menerapkan] Peserta didik mampu menggunakan..."
+         - "[C4 - Menganalisis] Peserta didik mampu menganalisis..."
+         - "[C5 - Mengevaluasi] Peserta didik mampu mengevaluasi..."
+         - "[C6 - Menciptakan] Peserta didik mampu merancang..."
        
-       **ATURAN MUTLAK KKTP**: KKTP harus berupa pernyataan operasional yang terukur (pernyataan deklaratif, diawali dengan Kata Kerja Operasional seperti 'Siswa mampu...' atau 'Peserta didik dapat...'). **DILARANG KERAS MENGGUNAKAN KALIMAT TANYA, TANDA TANYA (?), ATAU BENTUK INSTRUMEN PERTANYAAN/SOAL**. KKTP adalah kriteria ketercapaian, bukan pertanyaan evaluasi atau latihan soal.
-       
-       Pastikan setiap kriteria ditulis dengan sangat detail, bervariasi tingkat kognitifnya sesuai dengan tingkat kedalaman TP, dan menggunakan Kata Kerja Operasional (KKO) yang tepat dan bervariasi. JANGAN disingkat. Berikan yang panjang dan deskriptif.
+       **ATURAN MUTLAK INDIKATOR & KKTP**: Keduanya harus berupa pernyataan operasional yang terukur (pernyataan deklaratif, diawali dengan 'Peserta didik mampu...' atau 'Siswa dapat...'). **DILARANG KERAS MENGGUNAKAN KALIMAT TANYA ATAU INSTRUMEN PERTANYAAN/SOAL**. KKTP adalah kriteria ketercapaian, bukan latihan soal atau evaluasi tertulis.
+       Pastikan setiap butir ditulis dengan sangat detail, bervariasi tingkat kognitifnya, dan menggunakan Kata Kerja Operasional (KKO) yang tepat. JANGAN disingkat.
     7. Elemen Field: Isi field "element" dengan nama Elemen yang tepat dari teks CP.
     
     PENTING: Pastikan ID kelas dalam output sinkron dengan: [${selectedClasses.join(', ')}].
@@ -382,7 +396,7 @@ export async function generateMaterials(tp: TujuanPembelajaran, jpPerWeek?: numb
   const prompt = `
     Berdasarkan Tujuan Pembelajaran (TP) berikut:
     TP: ${tp.statement}
-    Kriteria (KKTP): ${tp.kktp.join(', ')}
+    Kriteria (KKTP): ${tp.indikatorTp.map(ind => `${ind.indikator}: ${ind.kktp.join(', ')}`).join('; ')}
     ${subject ? `Mata Pelajaran: ${subject}` : ''}
     ${jpPerWeek ? `Alokasi Waktu Mata Pelajaran: ${jpPerWeek} JP per minggu.` : ''}
     ${numberOfMeetings ? `ATURAN WAJIB: Anda HARUS menjabarkan materi ini menjadi TEPAT ${numberOfMeetings} pertemuan (sesuai ATP).` : ''}
@@ -770,7 +784,7 @@ export async function generateModulAjarFromATP(
     
     KONTEKS ATP:
     Tujuan Pembelajaran: ${atpItem.tpStatement}
-    Indikator Ketercapaian (KKTP): ${atpItem.kktp.join(', ')}
+    Indikator Ketercapaian (KKTP): ${atpItem.indikatorTp.map(ind => `${ind.indikator}: ${ind.kktp.join(', ')}`).join('; ')}
     Materi Inti: ${atpItem.content}
     Jumlah JP (Alokasi) untuk Modul ini: ${atpItem.jp} JP (Dalam ${atpItem.numberOfMeetings} kali pertemuan. Asumsi ${jpPerWeek} JP per minggu/pertemuan)
     
@@ -876,7 +890,7 @@ export async function generateModulAjar(
     
     KONTEKS:
     Tujuan Pembelajaran: ${tp.statement}
-    Kriteria (KKTP): ${tp.kktp.join(', ')}
+    Kriteria (KKTP): ${tp.indikatorTp.map(ind => `${ind.indikator}: ${ind.kktp.join(', ')}`).join('; ')}
     Aktivitas Fokus: ${activity}
     Model Pembelajaran yang Diminta: ${model}
     ${jpPerWeek ? `Alokasi Waktu Mata Pelajaran: ${jpPerWeek} JP per minggu.` : ''}
@@ -971,7 +985,22 @@ const ATP_SCHEMA = {
           element: { type: Type.STRING },
           competency: { type: Type.STRING },
           content: { type: Type.STRING, description: "Konten/Materi pembelajaran" },
-          kktp: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Indikator Ketercapaian (KKTP)" },
+          indikatorTp: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                indikator: { type: Type.STRING, description: "Kalimat Indikator Tujuan Pembelajaran yang konkret dan terukur (misal: 'Peserta didik mampu menyebutkan...')" },
+                kktp: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: "Daftar 3-4 Kriteria Ketercapaian (KKTP) menggunakan taksonomi Bloom (C1-C6) khusus untuk indikator ini. Format wajib: '[C1 - Mengingat] Siswa mampu...'"
+                }
+              },
+              required: ["indikator", "kktp"]
+            },
+            description: "Daftar Indikator Tujuan Pembelajaran, masing-masing dengan KKTP tersendiri"
+          },
           jp: { type: Type.NUMBER, description: "Alokasi waktu dalam Jam Pelajaran (JP)" },
           assessment: { type: Type.STRING, description: "Jenis penilaian dan instrumennya" },
           flow: { type: Type.NUMBER, description: "Urutan logis (1, 2, 3...)" },
@@ -981,10 +1010,10 @@ const ATP_SCHEMA = {
           classLevel: { type: Type.STRING },
           numberOfMeetings: { type: Type.NUMBER, description: "Jumlah pertemuan yang dibutuhkan untuk TP ini" },
           semester: { type: Type.INTEGER, description: "Semester 1 (Ganjil) atau 2 (Genap)" },
-          startWeek: { type: Type.INTEGER, description: "Minggu pelaksanaan dimulai (Semester 1: minggu 1-18, Semester 2: minggu 1-18/19-36)" },
+          startWeek: { type: Type.INTEGER, description: "Minggu pelaksanaan dimulai (Semester 1: minggu 1-19 karena hari mengajar lebih banyak, Semester 2: minggu 1-17 karena hari mengajar lebih sedikit)" },
           endWeek: { type: Type.INTEGER, description: "Minggu pelaksanaan berakhir" }
         },
-        required: ["tpId", "tpStatement", "cp", "element", "competency", "content", "kktp", "jp", "assessment", "flow", "resources", "keywords", "p3", "classLevel", "numberOfMeetings", "semester", "startWeek", "endWeek"]
+        required: ["tpId", "tpStatement", "cp", "element", "competency", "content", "indikatorTp", "jp", "assessment", "flow", "resources", "keywords", "p3", "classLevel", "numberOfMeetings", "semester", "startWeek", "endWeek"]
       }
     },
     rationale: { type: Type.STRING, description: "Rasionalisasi urutan alur tujuan pembelajaran" }
@@ -1021,24 +1050,38 @@ export async function generateATP(mapping: MappingResult, jpPerWeek: number, mee
       1. Urutkan TP secara logis dan pedagogis (misal: prasyarat -> materi inti -> pengayaan).
       2. WAJIB: PASTIKAN SEMUA TP DALAM DAFTAR DI ATAS MASUK KE DALAM OUTPUT. JANGAN ADA YANG TERLEWAT.
       3. JUMLAH JP & PERTEMUAN (ATURAN MATEMATIS SANGAT KETAT!): 
-         - 1 Tahun Ajaran memiliki 36 Minggu efektif (Semester 1 = 18 minggu, Semester 2 = 18 minggu).
-         - TOTAL KESELURUHAN field "numberOfMeetings" dari SEMUA TP di Kelas ${classLevel} INI WAJIB MENCAPAI ANGKA 36.
+         - 1 Tahun Ajaran memiliki 36 Minggu efektif, dengan pembagian proporsional di mana Semester 1 (Ganjil) memiliki lebih banyak minggu efektif (yaitu 19 minggu efektif) dibandingkan Semester 2 (Genap) yang memiliki lebih sedikit minggu efektif (yaitu 17 minggu efektif).
+         - TOTAL KESELURUHAN field "numberOfMeetings" dari SEMUA TP di Kelas ${classLevel} INI WAJIB MENCAPAI ANGKA 36 (Semester 1 = 19 minggu, Semester 2 = 17 minggu).
          - ATURAN PERHITUNGAN MINGGU (WAJIB DIPATUHI): Jumlah Minggu (numberOfMeetings) = (Total JP per TP / ${jpPerWeek}) * ${meetingsPerWeek}.
          - Hasil pembagian HARUS dibulatkan ke atas jika tidak bulat (Math.ceil).
          - Contoh: Jika Total JP per TP adalah 36, ${jpPerWeek} JP/minggu, dan ${meetingsPerWeek} pertemuan/minggu, maka numberOfMeetings = (36 / ${jpPerWeek}) * ${meetingsPerWeek}.
          - Field "jp" di setiap TP adalah total JP yang dialokasikan untuk TP tersebut.
          - **PERHATIAN KRUSIAL**: Nilai 'numberOfMeetings' (minggu) yang Anda tentukan di ATP INI akan menjadi jumlah minggu MUTLAK yang WAJIB digunakan sebagai dasar perhitungan di Modul Ajar, Prota, dan Prosem. DAN HARUS SAMA DENGAN (endWeek - startWeek + 1).
       4. PROGRAM TAHUNAN & SEMESTER (PROTA/PROSEM):
-         - Alokasikan TP secara berurutan. TP awal masuk "semester": 1 (Ganjil), TP berikutnya "semester": 2 (Genap). Semester 1 maksimal menggunakan 18 minggu efektif.
-         - Hitung startWeek dan endWeek secara kumulatif berdasarkan numberOfMeetings. Rumus: Jika TP sebelumnya berakhir di endWeek X, maka: startWeek = X + 1, endWeek = X + numberOfMeetings.
+         - Alokasikan TP secara berurutan. TP awal masuk "semester": 1 (Ganjil), TP berikutnya "semester": 2 (Genap). Semester 1 menggunakan total 19 minggu efektif, dan Semester 2 menggunakan total 17 minggu efektif. JANGAN membagi rata 18-18 minggu, melainkan berikan porsi lebih banyak di Semester 1 (19 minggu) dan porsi lebih sedikit di Semester 2 (17 minggu) sesuai permintaan pengguna.
+         - Hitung startWeek dan endWeek secara kumulatif berdasarkan numberOfMeetings untuk masing-masing semester. Untuk Semester 1, startWeek dan endWeek berada dalam rentang minggu 1 s.d. 19. Untuk Semester 2, startWeek dan endWeek berada dalam rentang minggu 1 s.d. 17.
          - **WAJIB**: Pastikan total jumlah minggu di prosem sesuai dengan total numberOfMeetings. StartWeek dan endWeek harus konsisten dengan jumlah pertemuan.
       5. CP & ELEMEN: 
          - Cantumkan potongan Capaian Pembelajaran (CP) asli yang relevan dengan TP tersebut.
          - Pastikan "element" (nama elemen) sesuai dengan kategori yang sudah ditentukan di TP.
       6. Konten/Materi: Jabarkan materi pembelajaran secara spesifik dan mendalam yang SANGAT RELEVAN.
-      7. KKTP (Indikator): Pembuatan Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) wajib dianalisis secara mendalam menggunakan **Taksonomi Bloom** (tingkat kognitif C1 s.d. C6). Berikan 3-4 kriteria/indikator ketercapaian yang konkret, detail, dan terukur untuk setiap TP. Di setiap butir KKTP, Anda **WAJIB** mencantumkan level kognitif Bloom di dalam tanda kurung siku di awal kalimat secara eksplisit (misalnya: [C1 - Mengingat], [C2 - Memahami], [C3 - Menerapkan], [C4 - Menganalisis], [C5 - Mengevaluasi], [C6 - Menciptakan]) diikuti penjelasan detail kemampuan siswa dengan Kata Kerja Operasional (KKO) yang relevan, spesifik, dan tidak disingkat.
+      7. indikatorTp & KKTP: **SANGAT PENTING & WAJIB**: Setiap Tujuan Pembelajaran (TP) harus dipecah menjadi beberapa **Indikator Tujuan Pembelajaran (indikatorTp)** yang konkret dan terukur.
+         - Di dalam field "indikatorTp" (yang berupa array of object), tentukan minimal 2-3 Indikator TP.
+         - Untuk **SETIAP** Indikator TP tersebut, susunlah Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) secara mendalam menggunakan Taksonomi Bloom (tingkat kognitif C1 hingga C6) yang relevan dan diturunkan langsung dari indikator tersebut secara kritis.
+         - Masukkan KKTP ini ke dalam field "kktp" di dalam objek Indikator TP masing-masing (berupa array of string). Berikan 3-4 kriteria KKTP yang konkret, terukur, dan detail untuk masing-masing indikator.
+         - Di setiap butir KKTP, Anda **WAJIB** mencantumkan level/tingkat kognitif Bloom di dalam tanda kurung siku di awal kalimat secara eksplisit, misalnya:
+           - "[C1 - Mengingat] Peserta didik mampu menyebutkan..."
+           - "[C2 - Memahami] Peserta didik mampu menjelaskan..."
+           - "[C3 - Menerapkan] Peserta didik mampu menggunakan..."
+           - "[C4 - Menganalisis] Peserta didik mampu menganalisis..."
+           - "[C5 - Mengevaluasi] Peserta didik mampu mengevaluasi..."
+           - "[C6 - Menciptakan] Peserta didik mampu merancang..."
          
-         **ATURAN MUTLAK KKTP**: KKTP harus berupa pernyataan operasional yang terukur (pernyataan deklaratif, diawali dengan KKO seperti 'Peserta didik mampu...' atau 'Siswa dapat...'). **DILARANG KERAS MENGGUNAKAN KALIMAT TANYA, TANDA TANYA (?), ATAU BENTUK INSTRUMEN PERTANYAAN/SOAL**. KKTP adalah kriteria ketercapaian, bukan pertanyaan evaluasi atau latihan soal.
+         ATURAN MUTLAK INDIKATOR & KKTP: Harus berupa pernyataan operasional yang terukur (pernyataan deklaratif, diawali dengan 'Peserta didik mampu...' atau 'Siswa dapat...'). DILARANG KERAS MENGGUNAKAN KALIMAT TANYA ATAU INSTRUMEN SOAL.
+         
+         Pastikan setiap butir ditulis sangat detail, bervariasi, dan menggunakan Kata Kerja Operasional (KKO) yang tepat. JANGAN disingkat.
+         
+         
       8. Assessment: Sebutkan jenis asesmen (Formatif/Sumatif) yang variatif.
       9. Sumber Belajar & Dimensi Profil Lulusan: Berikan sumber belajar dan Dimensi Profil Lulusan yang relevan.
       

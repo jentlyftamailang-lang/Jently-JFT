@@ -1068,7 +1068,16 @@ export default function App() {
                 ${tps.map(tp => `
                   <tr>
                     <td>${tp.statement}</td>
-                    <td>${tp.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}</td>
+                    <td>
+                      ${tp.indikatorTp && tp.indikatorTp.length > 0 ? tp.indikatorTp.map((ind, indIdx) => `
+                        <div style="margin-bottom: 12px; padding: 8px; background-color: #fcfcf9; border: 1px solid #e2e2d5; border-radius: 8px;">
+                          <p style="margin: 0 0 4px 0; font-weight: bold; color: #5A5A40; font-size: 11px;">Indikator ${indIdx + 1}: ${ind.indikator}</p>
+                          <ul style="margin: 0; padding-left: 15px; font-size: 10px;">
+                            ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                          </ul>
+                        </div>
+                      `).join('') : ''}
+                    </td>
                   </tr>
                 `).join('')}
                 ${tps.length === 0 ? '<tr><td colspan="2" style="text-align:center">Data tidak tersedia</td></tr>' : ''}
@@ -1141,7 +1150,14 @@ export default function App() {
                   <td>${item.cp}</td>
                   <td>${item.tpStatement}</td>
                   <td>
-                    ${item.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}
+                    ${item.indikatorTp && item.indikatorTp.length > 0 ? item.indikatorTp.map((ind, indIdx) => `
+                      <div style="margin-bottom: 12px; padding: 8px; background-color: #fcfcf9; border: 1px solid #e2e2d5; border-radius: 8px;">
+                        <p style="margin: 0 0 4px 0; font-weight: bold; color: #5A5A40; font-size: 11px;">Indikator ${indIdx + 1}: ${ind.indikator}</p>
+                        <ul style="margin: 0; padding-left: 15px; font-size: 10px;">
+                          ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                        </ul>
+                      </div>
+                    `).join('') : ''}
                   </td>
                   <td>${item.content}</td>
                   <td align="center">${item.jp} JP<br>(${item.numberOfMeetings} Perte.)</td>
@@ -2224,7 +2240,16 @@ export default function App() {
             ${tps.map(tp => `
               <tr>
                 <td>${tp.statement}</td>
-                <td>${tp.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}</td>
+                <td>
+                  ${tp.indikatorTp && tp.indikatorTp.length > 0 ? tp.indikatorTp.map((ind, indIdx) => `
+                    <div style="margin-bottom: 8px;">
+                      <b>Indikator ${indIdx + 1}:</b> ${ind.indikator}
+                      <ul style="margin-top: 2px; margin-bottom: 4px; padding-left: 15px;">
+                        ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                      </ul>
+                    </div>
+                  `).join('') : ''}
+                </td>
               </tr>
             `).join('')}
             ${tps.length === 0 ? '<tr><td colspan="2" style="text-align:center">Data tidak tersedia</td></tr>' : ''}
@@ -2276,7 +2301,14 @@ export default function App() {
                 <td>${item.cp}</td>
                 <td>${item.tpStatement}</td>
                 <td>
-                  ${item.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}
+                  ${item.indikatorTp && item.indikatorTp.length > 0 ? item.indikatorTp.map((ind, indIdx) => `
+                    <div style="margin-bottom: 8px;">
+                      <b>Indikator ${indIdx + 1}:</b> ${ind.indikator}
+                      <ul style="margin-top: 2px; margin-bottom: 4px; padding-left: 15px;">
+                        ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                      </ul>
+                    </div>
+                  `).join('') : ''}
                 </td>
                 <td>${item.content}</td>
                 <td align="center">${item.jp} JP<br>(${item.numberOfMeetings} Perte.)</td>
@@ -2417,7 +2449,16 @@ export default function App() {
                <p><b>Tujuan Pembelajaran:</b></p>
                <div><p>• ${item.tpStatement}</p></div>
                <p><b>Kriteria Ketercapaian (KKTP):</b></p>
-               <div>${item.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}</div>
+                <div>
+                  ${item.indikatorTp && item.indikatorTp.length > 0 ? item.indikatorTp.map((ind, indIdx) => `
+                    <div style="margin-bottom: 8px;">
+                      <b>Indikator ${indIdx + 1}:</b> ${ind.indikator}
+                      <ul style="margin-top: 2px; margin-bottom: 4px; padding-left: 15px;">
+                        ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                      </ul>
+                    </div>
+                  `).join('') : ''}
+                </div>
                <p><b>Pemahaman Bermakna:</b></p>
                <p><i>"${mod?.meaningfulUnderstanding || 'Siswa dapat memahami dan mengaplikasikan konsep yang diajarkan dalam kehidupan sehari-hari.'}"</i></p>
                <p><b>Pertanyaan Pemantik:</b></p>
@@ -2645,7 +2686,16 @@ export default function App() {
           ${tps.map(tp => `
             <tr>
               <td>${tp.statement}</td>
-              <td>${tp.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}</td>
+              <td>
+                ${tp.indikatorTp && tp.indikatorTp.length > 0 ? tp.indikatorTp.map((ind, indIdx) => `
+                  <div style="margin-bottom: 8px;">
+                    <b>Indikator ${indIdx + 1}:</b> ${ind.indikator}
+                    <ul style="margin-top: 2px; margin-bottom: 4px; padding-left: 15px;">
+                      ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                    </ul>
+                  </div>
+                `).join('') : ''}
+              </td>
             </tr>
           `).join('')}
           ${tps.length === 0 ? '<tr><td colspan="2" style="text-align:center">Data tidak tersedia</td></tr>' : ''}
@@ -2694,7 +2744,14 @@ export default function App() {
               <td>${item.cp}</td>
               <td>${item.tpStatement}</td>
               <td>
-                ${item.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}
+                ${item.indikatorTp && item.indikatorTp.length > 0 ? item.indikatorTp.map((ind, indIdx) => `
+                  <div style="margin-bottom: 8px;">
+                    <b>Indikator ${indIdx + 1}:</b> ${ind.indikator}
+                    <ul style="margin-top: 2px; margin-bottom: 4px; padding-left: 15px;">
+                      ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                    </ul>
+                  </div>
+                `).join('') : ''}
               </td>
               <td>${item.content}</td>
               <td align="center">${item.jp} JP<br>(${item.numberOfMeetings} Perte.)</td>
@@ -2824,7 +2881,16 @@ export default function App() {
                <p><b>Tujuan Pembelajaran:</b></p>
                <div><p>• ${item.tpStatement}</p></div>
                <p><b>Kriteria Ketercapaian (KKTP):</b></p>
-               <div>${item.kktp?.map(k => renderKKTPWithBloomBadgeHtml(k)).join('') || ''}</div>
+                <div>
+                  ${item.indikatorTp && item.indikatorTp.length > 0 ? item.indikatorTp.map((ind, indIdx) => `
+                    <div style="margin-bottom: 8px;">
+                      <b>Indikator ${indIdx + 1}:</b> ${ind.indikator}
+                      <ul style="margin-top: 2px; margin-bottom: 4px; padding-left: 15px;">
+                        ${ind.kktp?.map(k => `<li>${renderKKTPWithBloomBadgeHtml(k)}</li>`).join('') || ''}
+                      </ul>
+                    </div>
+                  `).join('') : ''}
+                </div>
                <p><b>Pemahaman Bermakna:</b></p>
                <p><i>"${mod?.meaningfulUnderstanding || 'Siswa dapat memahami dan mengaplikasikan konsep yang diajarkan dalam kehidupan sehari-hari.'}"</i></p>
                <p><b>Pertanyaan Pemantik:</b></p>
@@ -3589,7 +3655,7 @@ export default function App() {
 CP: ${cp}
 
 TP:
-${tps.map((tp, i) => `${i+1}. ${tp.statement}\n   KKTP: ${tp.kktp?.join(", ") || ''}`).join("\n")}`;
+${tps.map((tp, i) => `${i+1}. ${tp.statement}\n   Indikator & KKTP:\n${tp.indikatorTp?.map((ind, indIdx) => `     - Indikator ${indIdx + 1}: ${ind.indikator}\n       KKTP: ${ind.kktp?.join(", ") || ''}`).join("\n") || ''}`).join("\n")}`;
                                     }).join("\n\n");
                                     copyToClipboard(text);
                                   }}
@@ -3685,13 +3751,32 @@ ${tps.map((tp, i) => `${i+1}. ${tp.statement}\n   KKTP: ${tp.kktp?.join(", ") ||
                                               </div>
                                             </td>
                                             <td className="px-6 py-6 align-top bg-[#141414]/[0.02] w-1/2">
-                                              <div className="space-y-2">
-                                                {tp.kktp?.map((kriteria, kIdx) => (
-                                                  <div key={kIdx} className="flex gap-2 items-start text-[#141414]/70">
-                                                    <div className="mt-2.5 w-1 h-1 rounded-full bg-[#5A5A40] shrink-0" />
-                                                    <div className="flex-1">{renderKKTPWithBloomBadgeJsx(kriteria)}</div>
-                                                  </div>
-                                                ))}
+                                              <div className="space-y-4">
+                                                {tp.indikatorTp && tp.indikatorTp.length > 0 ? (
+                                                  tp.indikatorTp.map((indObj, indIdx) => (
+                                                    <div key={indIdx} className="space-y-2 bg-[#5A5A40]/5 p-3.5 rounded-2xl border border-[#5A5A40]/10">
+                                                      <div className="flex gap-2 items-start">
+                                                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-[#5A5A40] shrink-0" />
+                                                        <div className="flex-1">
+                                                          <span className="text-[9px] font-black uppercase tracking-wider text-[#5A5A40] block">Indikator {indIdx + 1}:</span>
+                                                          <p className="text-[#141414]/90 text-[11px] font-semibold leading-normal">{indObj.indikator}</p>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      <div className="pl-3.5 space-y-1.5">
+                                                        <span className="text-[8px] font-black uppercase tracking-wider text-amber-800 block">Kriteria Ketercapaian (KKTP):</span>
+                                                        {indObj.kktp?.map((kriteria, kIdx) => (
+                                                          <div key={kIdx} className="flex gap-2 items-start text-[#141414]/70 text-[10px] leading-tight">
+                                                            <div className="mt-1 w-1 h-1 rounded-full bg-amber-600 shrink-0" />
+                                                            <div className="flex-1">{renderKKTPWithBloomBadgeJsx(kriteria)}</div>
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    </div>
+                                                  ))
+                                                ) : (
+                                                  <div className="text-xs opacity-40 italic">Data indikator tidak tersedia</div>
+                                                )}
                                               </div>
                                             </td>
                                           </tr>
@@ -3843,15 +3928,34 @@ ${tps.map((tp, i) => `${i+1}. ${tp.statement}\n   KKTP: ${tp.kktp?.join(", ") ||
                                                           {item.tpStatement}
                                                         </td>
                                                         <td className="px-4 py-6 align-top">
-                                                          <ul className="space-y-1">
-                                                            {item.kktp?.map((k, kIdx) => (
-                                                              <li key={kIdx} className="text-[10px] flex gap-1.5 opacity-70">
-                                                                <div className="mt-1 w-1 h-1 bg-[#5A5A40] rounded-full shrink-0" />
-                                                                {renderKKTPWithBloomBadgeJsx(k)}
-                                                              </li>
-                                                            ))}
-                                                          </ul>
-                                                        </td>
+                                                           <div className="space-y-3">
+                                                             {item.indikatorTp && item.indikatorTp.length > 0 ? (
+                                                               item.indikatorTp.map((indObj, indIdx) => (
+                                                                 <div key={indIdx} className="space-y-1.5 bg-[#5A5A40]/5 p-2 rounded-xl border border-[#5A5A40]/10">
+                                                                   <div className="flex gap-1.5 items-start">
+                                                                     <div className="mt-1 w-1.5 h-1.5 rounded-full bg-[#5A5A40] shrink-0" />
+                                                                     <div className="flex-1">
+                                                                       <span className="text-[8px] font-black uppercase tracking-wider text-[#5A5A40] block">Indikator {indIdx + 1}:</span>
+                                                                       <p className="text-[#141414]/90 text-[10px] font-semibold leading-tight">{indObj.indikator}</p>
+                                                                     </div>
+                                                                   </div>
+                                                                   
+                                                                   <div className="pl-2.5 space-y-1">
+                                                                     <span className="text-[7px] font-black uppercase tracking-wider text-amber-800 block">KKTP:</span>
+                                                                     {indObj.kktp?.map((k, kIdx) => (
+                                                                       <div key={kIdx} className="flex gap-1 items-start text-[#141414]/70 text-[9px] leading-tight">
+                                                                         <div className="mt-1 w-1 h-1 rounded-full bg-amber-600 shrink-0" />
+                                                                         <div className="flex-1">{renderKKTPWithBloomBadgeJsx(k)}</div>
+                                                                       </div>
+                                                                     ))}
+                                                                   </div>
+                                                                 </div>
+                                                               ))
+                                                             ) : (
+                                                               <div className="text-[10px] opacity-40 italic">Data indikator tidak tersedia</div>
+                                                             )}
+                                                           </div>
+                                                         </td>
                                                         <td className="px-4 py-6 align-top text-[10px] italic font-medium opacity-80">
                                                           {item.content}
                                                         </td>
@@ -3965,10 +4069,10 @@ ${tps.map((tp, i) => `${i+1}. ${tp.statement}\n   KKTP: ${tp.kktp?.join(", ") ||
                                <div className="bg-white rounded-[50px] border border-[#141414]/5 p-12 shadow-2xl relative">
                                  <div className="mb-12 space-y-4 text-center">
                                    <div className="inline-block bg-[#141414]/5 px-6 py-2 rounded-full text-xs font-bold tracking-widest uppercase">
-                                     Estimasi {18 * (Number(jpPerWeek) || 3)} JP / Semester
+                                     Semester 1: {19 * (Number(jpPerWeek) || 3)} JP (19 Minggu) | Semester 2: {17 * (Number(jpPerWeek) || 3)} JP (17 Minggu)
                                    </div>
                                    <h2 className="text-3xl font-black">Program Tahunan</h2>
-                                   <p className="opacity-60 text-sm max-w-2xl mx-auto">Tujuan Pembelajaran dialokasikan menjadi dua semester berdasarkan jam pelajaran per minggu.</p>
+                                   <p className="opacity-60 text-sm max-w-2xl mx-auto">Tujuan Pembelajaran dialokasikan secara proporsional. Semester 1 dirancang memiliki porsi hari mengajar / minggu efektif yang lebih banyak (19 minggu efektif) dibandingkan Semester 2 (17 minggu efektif).</p>
                                  </div>
                                  
                                  <div className="space-y-12">
@@ -5605,12 +5709,19 @@ ${currentModul.differentiation}
                           <tr key={idx}>
                             <td className="border border-black px-3 py-2">{tp.statement}</td>
                             <td className="border border-black px-3 py-2">
-                              <div className="space-y-1">
-                                {tp.kktp?.map((k, kIdx) => (
-                                  <div key={kIdx}>
-                                    {renderKKTPWithBloomBadgeJsx(k)}
-                                  </div>
-                                ))}
+                              <div className="space-y-3 text-xs">
+                                {tp.indikatorTp && tp.indikatorTp.length > 0 ? (
+                                  tp.indikatorTp.map((ind, indIdx) => (
+                                    <div key={indIdx} className="space-y-1 bg-[#5A5A40]/5 p-2 rounded border border-[#5A5A40]/10">
+                                      <p className="font-bold text-[#5A5A40]">Indikator {indIdx + 1}: {ind.indikator}</p>
+                                      <div className="pl-3 space-y-1 text-[11px]">
+                                        {ind.kktp?.map((k, kIdx) => (
+                                          <div key={kIdx}>{renderKKTPWithBloomBadgeJsx(k)}</div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : null}
                               </div>
                             </td>
                           </tr>
@@ -5652,14 +5763,21 @@ ${currentModul.differentiation}
                                 <td className="border border-black px-2 py-1 font-bold">{item.tpStatement}</td>
                                 <td className="border border-black px-2 py-1">
                                   <b>Materi:</b> {item.content}<br/>
-                                  <div className="mt-1">
-                                    <b>KKTP:</b>
-                                    <div className="space-y-1 mt-0.5">
-                                      {item.kktp?.map((k, kIdx) => (
-                                        <div key={kIdx}>
-                                          {renderKKTPWithBloomBadgeJsx(k)}
-                                        </div>
-                                      ))}
+                                  <div className="mt-2 text-[11px]">
+                                    <b>Indikator & KKTP:</b>
+                                    <div className="space-y-2 mt-1">
+                                      {item.indikatorTp && item.indikatorTp.length > 0 ? (
+                                        item.indikatorTp.map((ind, indIdx) => (
+                                          <div key={indIdx} className="p-1.5 bg-[#5A5A40]/5 rounded border border-[#5A5A40]/10">
+                                            <p className="font-bold text-[#5A5A40]">Indikator {indIdx + 1}: {ind.indikator}</p>
+                                            <div className="pl-2.5 mt-1 space-y-0.5">
+                                              {ind.kktp?.map((k, kIdx) => (
+                                                <div key={kIdx}>{renderKKTPWithBloomBadgeJsx(k)}</div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ))
+                                      ) : null}
                                     </div>
                                   </div>
                                 </td>

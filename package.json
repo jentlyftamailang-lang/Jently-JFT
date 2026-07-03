@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit && eslint ."
   },
   "dependencies": {
+    "@google/genai": "^2.10.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
@@ -19,7 +20,7 @@
     "firebase": "^12.13.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
-    "openai": "^6.38.0",
+    "openai": "^6.45.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "vite": "^6.2.3"
