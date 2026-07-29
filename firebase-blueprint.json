@@ -45,6 +45,25 @@
         }
       },
       "required": ["userId", "title", "payload", "createdAt", "updatedAt"]
+    },
+    "AppConfig": {
+      "title": "Application Config",
+      "description": "Global application configuration including custom logo",
+      "type": "object",
+      "properties": {
+        "logoUrl": {
+          "type": "string",
+          "description": "Data URL or URL for custom app logo"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "User email or username who updated the settings"
+        }
+      }
     }
   },
   "firestore": {
@@ -55,6 +74,10 @@
     "perangkat_ajar/{docId}": {
       "schema": "SavedPerangkat",
       "description": "Collection of users' generated documents"
+    },
+    "app_settings/{configId}": {
+      "schema": "AppConfig",
+      "description": "Global application configuration settings"
     }
   }
 }

@@ -78,9 +78,14 @@ let openaiClient: OpenAI | null = null;
 let cachedKey: string | null = null;
 
 function getOpenaiClient() {
-  const apiKey = process.env.KUTRIKULUM || process.env.KURIKULUM || process.env.JENTLY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
+  // Do not use Google Gemini key for OpenAI client initialization as it will fail on api.aivene.com
+  const apiKey = process.env.KUTRIKULUM || 
+                 process.env.KURIKULUM || 
+                 process.env.JENTLY || 
+                 process.env.OPENAI_API_KEY || 
+                 (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.startsWith("AIzaSy") ? process.env.GEMINI_API_KEY : undefined);
   if (!apiKey) {
-    console.warn("[Server] OpenAI compatible API key (KUTRIKULUM/KURIKULUM/JENTLY/OPENAI_API_KEY/GEMINI_API_KEY) is missing!");
+    console.warn("[Server] OpenAI compatible API key (KUTRIKULUM/KURIKULUM/JENTLY/OPENAI_API_KEY) is missing!");
     return null;
   }
 
@@ -214,150 +219,370 @@ function findBestCacheMatch(prompt: string): string | null {
  * as a final fallback when all standard APIs are rate-limited / quota exhausted.
  */
 function generateFallbackDataForSchema(schema: any, prompt: string): any {
-  // 1. Tujuan Pembelajaran (TP)
-  if (schema.properties && schema.properties.cpPerClass) {
+  // Determine schema type based on unique properties or prompt indicators
+
+  // 1. Capaian & Tujuan Pembelajaran (TP) Schema
+  if (schema.properties && schema.properties.tujuanPembelajaran) {
     return {
       cpPerClass: [
         {
-          kelas: "Kelas I",
-          potonganCp: "Memahami, menerapkan, dan menjelaskan materi pembelajaran dasar Kurikulum Merdeka."
+          classId: "1",
+          cpSummary: "Peserta didik memahami konsep dasar pembelajaran mandiri dan kolaboratif."
+        },
+        {
+          classId: "2",
+          cpSummary: "Peserta didik menerapkan konsep dasar dalam memecahkan masalah kontekstual sederhana."
+        },
+        {
+          classId: "5",
+          cpSummary: "Peserta didik menganalisis hubungan sebab-akibat dari masalah kontekstual."
+        },
+        {
+          classId: "6",
+          cpSummary: "Peserta didik merumuskan solusi inovatif untuk masalah di lingkungan sekitar."
         }
       ],
-      tpList: [
+      tujuanPembelajaran: [
         {
           id: "TP-001",
-          tp: "Mengidentifikasi konsep dan topik utama dari materi ajar secara kritis.",
-          materi: "Konsep Dasar Utama",
-          alokasiJp: 4
+          element: "Pemahaman Konsep",
+          statement: "Mengidentifikasi konsep dan lingkup materi pembelajaran secara kritis dan mandiri.",
+          competency: "Mengidentifikasi",
+          content: "Konsep Dasar Utama",
+          classLevel: "1",
+          indikatorTp: [
+            {
+              indikator: "Peserta didik mampu menjelaskan konsep utama dengan bahasa sendiri.",
+              kktp: [
+                "[C1 - Mengingat] Siswa mampu menyebutkan elemen-elemen utama.",
+                "[C2 - Memahami] Siswa mampu membedakan konsep dasar dengan konsep lainnya."
+              ]
+            }
+          ]
         },
         {
           id: "TP-002",
-          tp: "Menganalisis hubungan antar-konsep dan merumuskan kesimpulan sederhana.",
-          materi: "Penerapan dan Analisis",
-          alokasiJp: 6
-        },
-        {
-          id: "TP-003",
-          tp: "Menyelesaikan masalah konkret yang relevan dengan topik pembelajaran.",
-          materi: "Pemecahan Masalah",
-          alokasiJp: 4
+          element: "Keterampilan Process",
+          statement: "Menganalisis hubungan sebab-akibat antar-konsep dalam situasi nyata sehari-hari.",
+          competency: "Menganalisis",
+          content: "Hubungan Sebab-Akibat",
+          classLevel: "1",
+          indikatorTp: [
+            {
+              indikator: "Peserta didik mampu memetakan hubungan sebab-akibat secara logis.",
+              kktp: [
+                "[C3 - Menerapkan] Siswa mampu menggambarkan diagram alur sebab-akibat.",
+                "[C4 - Menganalisis] Siswa mampu mendeteksi kesalahan hubungan logika."
+              ]
+            }
+          ]
         }
       ]
     };
   }
 
-  // 2. Alur Tujuan Pembelajaran (ATP)
-  if (schema.properties && schema.properties.atpList) {
+  // 2. Clarify Single TP Schema
+  if (schema.properties && schema.properties.statement && schema.properties.competency && schema.properties.indikatorTp) {
     return {
-      atpList: [
+      statement: "Mengidentifikasi, menjelaskan, dan merumuskan konsep materi esensial secara kritis, kreatif, dan mendalam dalam kehidupan sehari-hari.",
+      competency: "Mengidentifikasi dan Merumuskan",
+      content: "Konsep Dasar Esensial",
+      indikatorTp: [
         {
-          id: "ATP-1",
-          tpId: "TP-001",
-          tp: "Mengidentifikasi konsep dan topik utama dari materi ajar secara kritis.",
-          materi: "Konsep Dasar Utama",
-          semester: 1,
-          alokasiJp: 4,
-          flow: 1,
-          evaluasi: "Tes lisan dan kuis singkat."
+          indikator: "Peserta didik mampu menjelaskan konsep dasar dengan saksama.",
+          kktp: [
+            "[C1 - Mengingat] Siswa mampu mendefinisikan istilah-istilah kunci.",
+            "[C2 - Memahami] Siswa mampu menerangkan prinsip kerja konsep."
+          ]
         },
         {
-          id: "ATP-2",
-          tpId: "TP-002",
-          tp: "Menganalisis hubungan antar-konsep dan merumuskan kesimpulan sederhana.",
-          materi: "Penerapan dan Analisis",
-          semester: 1,
-          alokasiJp: 6,
-          flow: 2,
-          evaluasi: "Tugas kelompok dan presentasi."
-        },
-        {
-          id: "ATP-3",
-          tpId: "TP-003",
-          tp: "Menyelesaikan masalah konkret yang relevan dengan topik pembelajaran.",
-          materi: "Pemecahan Masalah",
-          semester: 2,
-          alokasiJp: 4,
-          flow: 3,
-          evaluasi: "Proyek mandiri dan penilaian portofolio."
+          indikator: "Peserta didik mampu mendemonstrasikan penerapan materi dalam simulasi sederhana.",
+          kktp: [
+            "[C3 - Menerapkan] Siswa mampu mempraktikkan langkah-langkah kerja sesuai prosedur.",
+            "[C4 - Menganalisis] Siswa mampu mengevaluasi hasil simulasi kelompok."
+          ]
         }
       ]
     };
   }
 
-  // 3. Modul Ajar (Lesson Plan)
-  if (schema.properties && schema.properties.identitas) {
-    return {
-      identitas: {
-        namaSekolah: "SD Negeri Merdeka Belajar",
-        mataPelajaran: "Mata Pelajaran Umum",
-        fase: "A / B / C",
-        kelas: "Kelas Dasar",
-        alokasiWaktu: "2 JP x 35 Menit (1 Pertemuan)",
-        materiPokok: "Pengenalan Konsep Esensial"
-      },
-      kompetensiAwal: "Peserta didik dapat memahami konsep awal secara intuitif dalam aktivitas harian.",
-      profilPancasila: [
-        "Bernalar Kritis",
-        "Mandiri",
-        "Kreatif",
-        "Gotong Royong"
-      ],
-      saranaPrasarana: {
-        fasilitas: "Laptop, LCD Proyektor, Papan Tulis, Alat Tulis",
-        sumberBelajar: "Buku Guru Kemendikbudristek, LKPD Mandiri, Lingkungan Sekitar"
-      },
-      targetPesertaDidik: "Peserta didik reguler/umum (tanpa hambatan belajar khusus)",
-      modelPembelajaran: "Problem-Based Learning (PBL) atau Tatap Muka Kolaboratif",
-      kompetensiInti: {
-        tujuanPembelajaran: "Peserta didik mampu mengenal, merumuskan, dan mendemonstrasikan konsep dasar dengan bimbingan.",
-        pemahamanBermakna: "Menyadari bahwa konsep dasar ini melatih kemampuan logika dan pengambilan keputusan terencana.",
-        pertanyaanPemantik: "Pernahkah kalian melihat benda atau situasi terkait materi ini di sekitarmu? Apa yang menarik dari sana?",
-        persiapanBersama: "Menyiapkan lembar aktivitas, presentasi gambar/video pendek, dan rubrik penilaian kerja kelompok."
-      },
-      langkahPembelajaran: [
-        {
-          pertemuan: 1,
-          kegiatanPendahuluan: "1. Guru menyapa murid dengan hangat, berdoa, dan mengecek kehadiran.\n2. Melakukan apersepsi interaktif dengan pertanyaan pemantik.\n3. Menyampaikan garis besar aktivitas dan kriteria pencapaian belajar.",
-          kegiatanInti: "1. **Orientasi**: Murid mengamati fenomena terkait di slide.\n2. **Organisasi**: Murid dibagi ke dalam kelompok kecil.\n3. **Penyelidikan**: Murid berdiskusi aktif mengerjakan LKPD dengan fasilitasi guru.\n4. **Presentasi**: Setiap kelompok menyajikan kesimpulan sederhana.\n5. **Evaluasi**: Guru memberikan masukan positif dan meluruskan konsep.",
-          kegiatanPenutup: "1. Membuat refleksi bersama murid mengenai keseruan dan pelajaran hari ini.\n2. Guru memberikan apresiasi atas partisipasi semua siswa.\n3. Doa penutup dan salam perpisahan."
-        }
-      ],
-      asesmen: {
-        diagnostik: "Tanya jawab pemahaman awal non-formal sebelum masuk ke kegiatan inti.",
-        formatif: "Lembar penilaian kerja kelompok dan keaktifan berpendapat selama diskusi.",
-        sumatif: "Latihan soal mandiri berisikan 3 soal pemahaman kontekstual."
-      }
-    };
-  }
-
-  // 4. Materials / Topik List
-  if (schema.properties && schema.properties.materials) {
+  // 3. Materials & Meetings Schema
+  if (schema.properties && schema.properties.materials && schema.properties.meetings) {
     return {
       materials: [
+        "Pengenalan Konsep Esensial dan Sejarah Perkembangannya",
+        "Analisis Studi Kasus dan Penerapan Teori Kontekstual",
+        "Simulasi Praktik Mandiri dan Kolaborasi Kelompok"
+      ],
+      meetings: [
         {
-          topik: "Eksplorasi Konsep Dasar",
-          deskripsi: "Mempelajari pengertian, ruang lingkup, dan kegunaan materi dalam kehidupan sehari-hari.",
-          durasiJp: 2
+          session: 1,
+          activity: "Orientasi materi, penjelasan kompetensi dasar, kuis pemahaman awal, dan diskusi interaktif kelompok."
         },
         {
-          topik: "Uji Coba Kolaboratif",
-          deskripsi: "Praktek berkelompok memecahkan studi kasus kontekstual melalui diskusi terpadu.",
-          durasiJp: 4
+          session: 2,
+          activity: "Aktivitas penyelidikan mandiri, pengerjaan LKPD berkelompok, dan presentasi hasil analisis."
+        },
+        {
+          session: 3,
+          activity: "Proyek pemecahan masalah sederhana, evaluasi bersama, refleksi pembelajaran, dan asesmen formatif."
         }
       ]
     };
   }
 
-  // 5. Kelengkapan Modul (lampiran, soal, materi, lkpd)
-  if (schema.properties && (schema.properties.materi || schema.properties.lkpd || schema.properties.soal)) {
+  // 4. Modul Ajar (Lesson Plan) Schema
+  if (schema.properties && schema.properties.meetingActivities && schema.properties.rubrics) {
     return {
-      materi: "### RINGKASAN MATERI UTAMA\n\nKurikulum Merdeka berfokus pada pengembangan karakter Profil Pelajar Pancasila dan pemahaman esensial. Pembelajaran aktif dirancang menyenangkan untuk memicu rasa ingin tahu alami siswa.",
-      lkpd: "### LEMBAR KERJA PESERTA DIDIK (LKPD)\n\n**Kelompok:** ....................\n**Anggota:** 1. .................... 2. ....................\n\n**Tugas Diskusi:**\n1. Diskusikan bersama teman kelompok mengenai penerapan teori dasar.\n2. Tuliskan contoh konkrit penerapan materi ini dalam buku catatanmu.",
-      soal: "### INSTRUMEN EVALUASI MANDIRI\n\n1. Tuliskan kembali 3 konsep kunci yang telah dipelajari hari ini!\n2. Mengapa kerja sama kelompok penting dalam menyelesaikan proyek pembelajaran?",
-      lampiran: "### DOKUMEN LAMPIRAN\n\n- Rubrik Asesmen Sikap Gotong Royong (1-4)\n- Rubrik Presentasi Hasil Diskusi\n- Lembar Penilaian Diri Murid"
+      title: "Modul Ajar Pembelajaran Mendalam (Deep Learning) 8-3-3-4",
+      cp: "Capaian Pembelajaran Dasar Kurikulum Merdeka",
+      tpStatement: "Mengidentifikasi, menganalisis, dan memecahkan masalah kontekstual secara kritis dan kolaboratif.",
+      targetStudents: "Peserta Didik Reguler / Umum",
+      duration: "3 JP (3 x 35 Menit)",
+      ppp: [
+        "Penalaran Kritis",
+        "Kreativitas",
+        "Kolaborasi"
+      ],
+      media: [
+        "Laptop dan LCD Proyektor",
+        "LKPD Mandiri",
+        "Bahan bacaan siswa dan slide presentasi"
+      ],
+      meaningfulUnderstanding: "Melalui pembelajaran ini, siswa menyadari pentingnya berpikir kritis dalam memecahkan masalah harian.",
+      triggerQuestions: [
+        "Pernahkah kalian melihat situasi sulit di sekitar rumah? Bagaimana cara kalian membantu menyelesaikannya?",
+        "Mengapa kerja sama tim mempermudah pencarian solusi?"
+      ],
+      model: "Problem-Based Learning (PBL)",
+      meetingActivities: [
+        {
+          session: 1,
+          activityTitle: "Orientasi Masalah & Penyelidikan Berkelompok",
+          steps: [
+            {
+              phase: "Pendahuluan",
+              activity: "1. Guru membuka kelas dengan salam hangat, berdoa, dan presensi.\n2. Guru melakukan apersepsi interaktif dengan mengajukan pertanyaan pemantik selama 10 menit.\n3. Guru menjelaskan tujuan pembelajaran hari ini."
+            },
+            {
+              phase: "Kegiatan Inti",
+              activity: "1. **Mengamati**: Siswa melihat slide presentasi studi kasus masalah harian (15 menit).\n2. **Menanya & Menyelidiki**: Siswa dibagi dalam kelompok kecil beranggotakan 4-5 orang. Mereka berdiskusi memecahkan LKPD (30 menit).\n3. **Mempresentasikan**: Perwakilan kelompok menyajikan kesimpulan awal diskusi mereka ke depan kelas (20 menit)."
+            },
+            {
+              phase: "Penutup",
+              activity: "1. Guru memfasilitasi refleksi bersama tentang hal menarik yang dipelajari hari ini (10 menit).\n2. Guru menyampaikan rencana kegiatan pertemuan berikutnya.\n3. Kelas diakhiri dengan doa bersama dan salam penutup."
+            }
+          ]
+        }
+      ],
+      assessment: "Asesmen Formatif (Keaktifan Diskusi) dan Asesmen Sumatif (Latihan Mandiri)",
+      differentiation: "Diferensiasi Proses: Pengelompokan berdasarkan kesiapan belajar siswa yang bervariasi.",
+      rubrics: `
+        <div class="overflow-x-auto">
+          <table class="min-w-full border-collapse border border-gray-200">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border border-gray-200 px-4 py-2 text-left text-xs font-bold">Kriteria Penilaian</th>
+                <th class="border border-gray-200 px-4 py-2 text-left text-xs font-bold">Sangat Baik (4)</th>
+                <th class="border border-gray-200 px-4 py-2 text-left text-xs font-bold">Baik (3)</th>
+                <th class="border border-gray-200 px-4 py-2 text-left text-xs font-bold">Cukup (2)</th>
+                <th class="border border-gray-200 px-4 py-2 text-left text-xs font-bold">Perlu Bimbingan (1)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="border border-gray-200 px-4 py-2 text-xs font-semibold">Pemahaman Konsep</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Menunjukkan pemahaman konsep secara utuh tanpa bimbingan</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Menunjukkan pemahaman konsep dengan kesalahan kecil</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Pemahaman konsep terbatas, butuh bantuan teman sebaya</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Belum memahami konsep dasar utama</td>
+              </tr>
+              <tr>
+                <td class="border border-gray-200 px-4 py-2 text-xs font-semibold">Keaktifan Kolaborasi</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Sangat aktif berpendapat dan menghargai masukan teman</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Aktif berpartisipasi dalam diskusi kelompok</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Hanya berbicara sesekali jika ditanya</td>
+                <td class="border border-gray-200 px-4 py-2 text-xs text-gray-600">Pasif atau tidak bersedia bekerja sama</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `
     };
   }
 
+  // 5. Alur Tujuan Pembelajaran (ATP) Schema
+  if (schema.properties && schema.properties.items && schema.properties.rationale) {
+    return {
+      items: [
+        {
+          tpId: "TP-001",
+          tpStatement: "Mengidentifikasi konsep dan lingkup materi pembelajaran secara kritis dan mandiri.",
+          cp: "Peserta didik menganalisis hubungan antara bentuk serta fungsi bagian tubuh pada manusia.",
+          element: "Pemahaman Konsep",
+          competency: "Mengidentifikasi",
+          content: "Konsep Dasar Bagian Tubuh",
+          indikatorTp: [
+            {
+              indikator: "Peserta didik mampu menyebutkan bagian-bagian tubuh dan kegunaannya.",
+              kktp: [
+                "[C1 - Mengingat] Siswa mampu menunjuk posisi panca indera.",
+                "[C2 - Memahami] Siswa mampu mencocokkan panca indera dengan fungsinya."
+              ]
+            }
+          ],
+          jp: 4,
+          assessment: "Formatif: Keaktifan diskusi kelompok. Sumatif: LKPD individu.",
+          flow: 1,
+          resources: ["Buku Siswa IPAS Kelas V Kemendikbudristek", "Slide gambar panca indera"],
+          keywords: ["panca indera", "fungsi tubuh"],
+          p3: ["Bernalar Kritis", "Mandiri"],
+          classLevel: "1",
+          numberOfMeetings: 2,
+          semester: 1,
+          startWeek: 1,
+          endWeek: 2
+        },
+        {
+          tpId: "TP-002",
+          tpStatement: "Menganalisis hubungan sebab-akibat antar-konsep dalam situasi nyata sehari-hari.",
+          cp: "Peserta didik menganalisis hubungan antara bentuk serta fungsi bagian tubuh pada manusia.",
+          element: "Keterampilan Proses",
+          competency: "Menganalisis",
+          content: "Hubungan Antar Bagian Tubuh",
+          indikatorTp: [
+            {
+              indikator: "Peserta didik mampu menerangkan efek disfungsi salah satu panca indera.",
+              kktp: [
+                "[C3 - Menerapkan] Siswa mampu melakukan simulasi aktivitas tanpa satu indera.",
+                "[C4 - Menganalisis] Siswa mampu menarik kesimpulan hubungan timbal balik."
+              ]
+            }
+          ],
+          jp: 6,
+          assessment: "Formatif: Presentasi hasil laporan observasi sederhana.",
+          flow: 2,
+          resources: ["Video interaktif sistem saraf", "Alat peraga sederhana"],
+          keywords: ["disfungsi indera", "simulasi"],
+          p3: ["Bernalar Kritis", "Kreatif"],
+          classLevel: "1",
+          numberOfMeetings: 3,
+          semester: 1,
+          startWeek: 3,
+          endWeek: 5
+        }
+      ],
+      rationale: "Urutan alur tujuan pembelajaran dirancang dengan memulai dari identifikasi dasar struktur fisik organ, diikuti oleh pemahaman hubungan timbal balik dan efek fungsional dalam kehidupan sehari-hari."
+    };
+  }
+
+  // 6. Infographic Schema Fallback
+  if (schema.properties && schema.properties.topicTitle && schema.properties.sections) {
+    return {
+      topicTitle: "Perdagangan Antar Pulau",
+      jenjang: "SMP",
+      isIpsSubject: true,
+      ipsDomain: "Ekonomi",
+      intro: "Perdagangan antar pulau adalah kegiatan pertukaran barang atau jasa yang dilakukan oleh penduduk suatu pulau dengan pulau lain di wilayah Indonesia atas kesepakatan bersama.",
+      coreConcept: "Setiap pulau di Indonesia memiliki sumber daya alam yang berbeda-beda. Perdagangan antar pulau menghubungkan daerah pemroduksi barang dengan daerah yang membutuhkan.",
+      sections: [
+        {
+          id: "section-1",
+          subheading: "Penyebab Terjadinya Perdagangan Antar Pulau",
+          explanation: "Perbedaan sumber daya alam dan tingkat harga antar daerah memicu terjadinya aliran barang.",
+          keyPoints: [
+            "Perbedaan faktor produksi antar wilayah (iklim, kondisi tanah, ketersediaan bahan baku).",
+            "Perbedaan tingkat harga barang antar daerah yang memicu keuntungan perdagangan.",
+            "Kebutuhan untuk memenuhi permintaan masyarakat yang tidak dapat diproduksi sendiri."
+          ],
+          simpleExample: "Pulau Maluku kaya akan rempah-rempah mengirim cengkeh ke Pulau Jawa, sementara Pulau Jawa mengirim produk tekstil dan olahan makanan ke Maluku.",
+          imagePrompt: "traditional market trading goods ships in archipelago indonesia",
+          visualType: "map",
+          simplifiedExplanation: "Perdagangan antar pulau terjadi karena pulau yang satu punya barang yang tidak dimiliki pulau lain, sehingga mereka saling tukar-menukar barang.",
+          simplifiedAnalogy: "Seperti kamu punya pensil warna dan temanmu punya buku gambar. Kalian saling meminjamkan agar bisa menggambar bersama.",
+          extraDetails: "Di Indonesia, terdapat pelabuhan-pelabuhan utama seperti Tanjung Priok (Jakarta) dan Tanjung Perak (Surabaya) yang menjadi hub transportasi laut nasional."
+        },
+        {
+          id: "section-2",
+          subheading: "Tujuan & Manfaat Perdagangan Antar Pulau",
+          explanation: "Perdagangan laut nasional memperluas jangkauan pasar dan meningkatkan kesejahteraan masyarakat.",
+          keyPoints: [
+            "Memperoleh keuntungan ekonomi bagi para produsen dan pedagang.",
+            "Memperluas jangkauan pasar hingga ke pelosok negeri.",
+            "Meningkatkan produktivitas kerja masyarakat daerah.",
+            "Menyediakan alternatif pemenuhan kebutuhan bagi konsumen."
+          ],
+          simpleExample: "Petani kelapa sawit di Sumatra bisa menjual hasil panennya hingga ke Sulawesi dan Papua.",
+          imagePrompt: "cargo ship sea transport archipelago indonesia sunset",
+          visualType: "diagram",
+          simplifiedExplanation: "Manfaatnya membuat semua orang di Indonesia bisa menikmati hasil bumi dari pulau lain dengan harga terjangkau.",
+          simplifiedAnalogy: "Sama seperti toko kelontong di depan rumahmu yang menjual buah dari Sumatera meskipun tokonya berada di Jawa.",
+          extraDetails: "Konektivitas pelayaran laut (Tol Laut) sangat penting untuk menjaga kestabilan harga barang di wilayah Indonesia bagian timur."
+        },
+        {
+          id: "section-3",
+          subheading: "Faktor Pendorong dan Penghambat",
+          explanation: "Perkembangan teknologi maritim pendorong utama, sedangkan cuaca ekstrem bisa menjadi hambatan.",
+          keyPoints: [
+            "Pendorong: Sarana transportasi kapal laut, teknologi komunikasi digital, regulasi antar wilayah.",
+            "Penghambat: Gelombang laut tinggi/cuaca buruk, biaya logistik yang tinggi, keterbatasan dermaga."
+          ],
+          simpleExample: "Kapal kargo laut besar memudahkan pengiriman ratusan ton beras dari Jawa ke Kalimantan.",
+          imagePrompt: "modern logistics cargo port containers indonesia",
+          visualType: "comparison",
+          simplifiedExplanation: "Kapal laut dan internet mempercepat perdagangan, tetapi badai laut bisa menunda pengiriman.",
+          simplifiedAnalogy: "Seperti memesan barang via kurir online. Kurir cepat sampai jika jalanan lancar, tetapi melambat jika hujan deras.",
+          extraDetails: "Pemerintah Indonesia membangun sarana Tol Laut untuk memperlancar arus logistik dan menurunkan disparitas harga."
+        }
+      ],
+      realLifeExamples: [
+        "Membeli buah naga asal Jawa Timur di pasar tradisional Makassar.",
+        "Minyak goreng buatan Sumatra yang digunakan untuk memasak di Nusa Tenggara.",
+        "Membeli ukiran kayu khas Bali secara online dari Jakarta."
+      ],
+      funFact: "Indonesia memiliki lebih dari 17.000 pulau, menjadikannya salah satu negara kepulauan terbesar di dunia dengan jaringan jalur perdagangan maritim paling aktif!",
+      conclusions: [
+        "Perdagangan antar pulau terjadi karena perbedaan potensi sumber daya alam antar daerah.",
+        "Manfaat utamanya adalah meratakan ketersediaan barang dan membuka lapangan kerja.",
+        "Transportasi laut (kapal logistik) adalah tulang punggung perekonomian kepulauan Indonesia."
+      ],
+      understandingQuestions: [
+        "Mengapa perbedaan sumber daya alam mendorong perdagangan antar pulau?",
+        "Sebutkan 2 contoh barang yang diperdagangkan antar pulau di daerah sekitar tempat tinggalmu!",
+        "Bagaimana peran kapal laut dalam menjaga kestabilan harga barang di Indonesia?"
+      ],
+      quiz: [
+        {
+          question: "Faktor utama yang menyebabkan terjadinya perdagangan antar pulau di Indonesia adalah...",
+          options: [
+            "Perbedaan bahasa daerah",
+            "Perbedaan faktor produksi dan sumber daya alam",
+            "Kesamaan bentuk geografis pulau",
+            "Jumlah penduduk yang sama di setiap pulau"
+          ],
+          correctIndex: 1,
+          explanation: "Benar! Perbedaan ketersediaan sumber daya alam dan iklim membuat setiap pulau menghasilkan barang yang berbeda-beda."
+        },
+        {
+          question: "Manfaat utama perdagangan antar pulau bagi konsumen adalah...",
+          options: [
+            "Membuat barang menjadi semakin langka",
+            "Memperluas pemenuhan kebutuhan dengan pilihan barang beragam",
+            "Menaikkan ongkos kirim barang",
+            "Membatasi komunikasi antar daerah"
+          ],
+          correctIndex: 1,
+          explanation: "Benar! Konsumen dapat memperoleh barang kebutuhan yang tidak diproduksi di pulau tempat tinggalnya."
+        }
+      ],
+      thinkQuestions: [
+        "Apa yang akan terjadi jika pengiriman kapal antar pulau terhenti selama satu bulan?",
+        "Bagaimana pemanfaatan internet dapat mempermudah UMKM lokal menjual produk ke pulau lain?"
+      ]
+    };
+  }
+
+  // 7. Generic Fallback
   const mock: any = {};
   if (schema.properties) {
     for (const key in schema.properties) {
@@ -371,7 +596,7 @@ function generateFallbackDataForSchema(schema: any, prompt: string): any {
       } else if (prop.type === "BOOLEAN" || prop.type === "boolean") {
         mock[key] = true;
       } else {
-        mock[key] = "Contoh isi data dari sistem fallback Kurikulum Merdeka.";
+        mock[key] = "Contoh data dari sistem cadangan Kurikulum Merdeka.";
       }
     }
   }
@@ -386,55 +611,36 @@ async function generateContent(prompt: string, schema: any, temperature: number 
   // 1. Check exact-match local cache first
   const cacheKey = getCacheKey(prompt);
   if (responseCache[cacheKey]) {
-    console.log("[Server][Cache Hit] Respon untuk prompt ini ditemukan di cache lokal. Mengembalikan instan.");
-    return {
-      text: responseCache[cacheKey]
-    };
-  }
-
-  // 2. Try OpenAI compatible provider (Aivene) first
-  const oaiClient = getOpenaiClient();
-  if (oaiClient) {
-    const oaiModelsToTry = ["gpt-4o-mini", "gpt-4o"];
-    for (const model of oaiModelsToTry) {
-      try {
-        console.log(`[Server] Menjalankan pemrosesan dengan provider OpenAI (Aivene) model: ${model}...`);
-        const fixedSchema = fixSchemaTypes(schema);
-        const completion = await oaiClient.chat.completions.create({
-          model,
-          messages: [
-            { role: "system", content: "You are a helpful assistant that always responds in JSON format conforming exactly to the requested schema." },
-            { role: "user", content: prompt }
-          ],
-          temperature,
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              name: "response_schema",
-              strict: true,
-              schema: fixedSchema
-            }
+    let isValidCache = true;
+    try {
+      const parsed = JSON.parse(responseCache[cacheKey]);
+      const data = parsed.result || parsed;
+      if (data && Array.isArray(data.meetingActivities)) {
+        for (const ma of data.meetingActivities) {
+          if (!Array.isArray(ma.steps) || ma.steps.length < 3) {
+            console.log(`[Server][Cache Invalidation] Modul Ajar di cache memiliki ${ma.steps ? ma.steps.length : 0} langkah (kurang dari 3). Mengabaikan cache.`);
+            isValidCache = false;
+            break;
           }
-        });
-
-        const responseText = completion.choices[0]?.message?.content || "{}";
-        console.log(`[Server] Berhasil memproses konten dengan provider OpenAI (Aivene) model: ${model}`);
-        
-        // Save result to cache
-        responseCache[cacheKey] = responseText;
-        saveCache();
-
-        return {
-          text: responseText
-        };
-      } catch (openaiError: any) {
-        console.warn(`[Server] Provider OpenAI (Aivene) model ${model} gagal:`, openaiError.message || openaiError);
+        }
       }
+    } catch (err) {
+      console.warn("[Server][Cache Error] Gagal memvalidasi JSON di cache, mengabaikan cache.", err);
+      isValidCache = false;
     }
-    console.log("[Server] Semua model OpenAI (Aivene) gagal. Mencoba beralih ke provider Gemini...");
+
+    if (isValidCache) {
+      console.log("[Server][Cache Hit] Respon untuk prompt ini ditemukan di cache lokal. Mengembalikan instan.");
+      return {
+        text: responseCache[cacheKey]
+      };
+    } else {
+      delete responseCache[cacheKey];
+      saveCache();
+    }
   }
 
-  // 3. Fallback to Gemini Provider
+  // 2. Try standard Google GenAI (Gemini) Provider first (Native, super fast and free in AI Studio)
   const gemClient = getGeminiClient();
   if (gemClient) {
     const cleanedSchema = cleanSchemaForGemini(schema);
@@ -493,6 +699,48 @@ async function generateContent(prompt: string, schema: any, temperature: number 
         } else {
           console.log(`[Server] Model ${model} tidak merespon (status: ${status || "unknown"}). Mencoba alternatif...`);
         }
+      }
+    }
+    console.log("[Server] Semua model Gemini gagal. Mencoba beralih ke provider OpenAI (Aivene) sebagai cadangan...");
+  }
+
+  // 3. Fallback to OpenAI compatible provider (Aivene) if available
+  const oaiClient = getOpenaiClient();
+  if (oaiClient) {
+    const oaiModelsToTry = ["gpt-4o-mini", "gpt-4o"];
+    for (const model of oaiModelsToTry) {
+      try {
+        console.log(`[Server] Menjalankan pemrosesan dengan provider OpenAI (Aivene) model: ${model}...`);
+        const fixedSchema = fixSchemaTypes(schema);
+        const completion = await oaiClient.chat.completions.create({
+          model,
+          messages: [
+            { role: "system", content: "You are a helpful assistant that always responds in JSON format conforming exactly to the requested schema." },
+            { role: "user", content: prompt }
+          ],
+          temperature,
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "response_schema",
+              strict: true,
+              schema: fixedSchema
+            }
+          }
+        });
+
+        const responseText = completion.choices[0]?.message?.content || "{}";
+        console.log(`[Server] Berhasil memproses konten dengan provider OpenAI (Aivene) model: ${model}`);
+        
+        // Save result to cache
+        responseCache[cacheKey] = responseText;
+        saveCache();
+
+        return {
+          text: responseText
+        };
+      } catch (openaiError: any) {
+        console.warn(`[Server] Provider OpenAI (Aivene) model ${model} gagal:`, openaiError.message || openaiError);
       }
     }
   }

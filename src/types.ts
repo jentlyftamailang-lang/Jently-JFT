@@ -51,6 +51,7 @@ export type LearningModel = 'Problem Based Learning (PBL)' | 'Project Based Lear
 
 export interface ModulAjar {
   title: string;
+  cp?: string; // Capaian Pembelajaran (CP) asal
   tpStatement: string;
   targetStudents: string;
   duration: string;
@@ -66,6 +67,8 @@ export interface ModulAjar {
   meetingActivities?: {
     session: number;
     activityTitle: string;
+    tp?: string;
+    kktp?: string;
     steps: {
       phase: string;
       activity: string;
@@ -123,4 +126,43 @@ export interface SavedPerangkat {
   payload: string; // JSON containing { mapelInput, phase, jpPerWeek, selectedClasses, cpContent, mappingResult, atp, modules }
   createdAt: string;
   updatedAt: string;
+}
+
+export interface InfographicSection {
+  id: string;
+  subheading: string;
+  explanation: string;
+  keyPoints: string[];
+  simpleExample: string;
+  imagePrompt: string;
+  imageUrl?: string;
+  visualType?: 'map' | 'diagram' | 'chart' | 'illustration' | 'timeline' | 'comparison';
+  simplifiedExplanation?: string;
+  simplifiedAnalogy?: string;
+  extraDetails?: string;
+}
+
+export interface InteractiveQuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface InfographicData {
+  id?: string;
+  topicTitle: string;
+  jenjang: 'SD' | 'SMP' | 'SMA/SMK';
+  isIpsSubject?: boolean;
+  ipsDomain?: 'Geografi' | 'Ekonomi' | 'Sosiologi' | 'Sejarah' | 'Umum';
+  intro: string;
+  coreConcept: string;
+  sections: InfographicSection[];
+  realLifeExamples: string[];
+  funFact: string;
+  conclusions: string[];
+  understandingQuestions: string[];
+  quiz: InteractiveQuizQuestion[];
+  thinkQuestions: string[];
+  createdAt?: string;
 }

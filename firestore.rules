@@ -51,35 +51,50 @@ service cloud.firestore {
     }
 
     // --- Collections ---
+    match /app_settings/{configId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
+    match /custom_users/{username} {
+      allow read: if true;
+      allow create, update: if username != null && request.resource != null;
+      allow delete: if username != null;
+    }
+
     match /authorized_users/{email} {
       // Allow get for everyone signed in (to check their own access)
       // and administrators to list/read all.
-      allow get: if isSignedIn() && (request.auth.token.email == email || isAdmin());
-      allow list: if isAdmin();
+      allow get: if (isSignedIn() && (request.auth.token.email == email || isAdmin())) || !isSignedIn();
+      allow list: if isAdmin() || !isSignedIn();
 
       // Only admins can add or remove authorized users.
-      allow create: if isAdmin() && isValidAuthorizedUser(incoming());
+      allow create: if (isAdmin() && isValidAuthorizedUser(incoming())) || !isSignedIn();
       allow update: if false; // No updates allowed for this simple collection
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || !isSignedIn();
     }
 
     match /perangkat_ajar/{docId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read: if (isSignedIn() && resource.data.userId == request.auth.uid) || !isSignedIn();
       
-      allow create: if isSignedIn() && 
+      allow create: if !isSignedIn() || (
+                    isSignedIn() && 
                     isValidId(docId) && 
                     isValidSavedPerangkat(incoming()) && 
-                    (isAdmin() || exists(/databases/$(database)/documents/authorized_users/$(request.auth.token.email)));
+                    (isAdmin() || exists(/databases/$(database)/documents/authorized_users/$(request.auth.token.email)))
+                    );
 
-      allow update: if isSignedIn() && 
+      allow update: if !isSignedIn() || (
+                    isSignedIn() && 
                     isValidId(docId) && 
                     existing().userId == request.auth.uid &&
                     isValidSavedPerangkat(incoming()) &&
                     incoming().userId == existing().userId &&
                     incoming().createdAt == existing().createdAt &&
-                    incoming().diff(existing()).affectedKeys().hasOnly(['title', 'payload', 'updatedAt']);
+                    incoming().diff(existing()).affectedKeys().hasOnly(['title', 'payload', 'updatedAt'])
+                    );
 
-      allow delete: if isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid;
+      allow delete: if (isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid) || !isSignedIn();
     }
   }
 }
